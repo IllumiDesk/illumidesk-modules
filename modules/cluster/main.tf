@@ -25,8 +25,23 @@ terraform {
 ## Deploy application
 locals {
   release_name = "cluster-illumidesk-resource"
-  chart_name   = "cluster"
+  chart_name   = "illumidesk/cluster"
   version      = "0.0.1"
+
+}
+
+locals {
+  values = merge({
+    efsCSIDriver = {
+      enabled      = true
+      region       = regex("(\\w+-\\w+-\\d)", var.eks_iam_openid_connect_provider_url)
+      imageAddress = var.imageAddress
+      PassARN      = true
+      roleARN      = aws_iam_role.efs-csi-driver-role.arn
+    }
+    },
+
+  )
 }
 
 # creates efs csi driver role and configures assume role policy document
@@ -39,12 +54,12 @@ resource "aws_iam_role" "efs-csi-driver-role" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Federated": "arn:aws:iam::${var.account_id}:oidc-provider/oidc.eks.${regex(var.eks_iam_openid_connect_provider_url, "\\w+-\\w+-\\d")}.amazonaws.com/id/${regex(var.eks_iam_openid_connect_provider_url, "\\w+$")}"
+        "Federated": "arn:aws:iam::${var.account_id}:oidc-provider/oidc.eks.us-west-2.amazonaws.com/id/${regex("[[:alnum:]]+$", var.eks_iam_openid_connect_provider_url)}"
       },
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringEquals": {
-          "oidc.eks.region-code.amazonaws.com/id/${regex(var.eks_iam_openid_connect_provider_url, "\\w+$")}:sub": "system:serviceaccount:kube-system:efs-csi-controller-sa"
+          "oidc.eks.us-west-2.amazonaws.com/id/${regex("[[:alnum:]]+$", var.eks_iam_openid_connect_provider_url)}:sub": "system:serviceaccount:kube-system:efs-csi-controller-sa"
         }
       }
     }
@@ -118,31 +133,7 @@ resource "helm_release" "k8s_cluster_resource" {
   version    = local.version
   namespace  = "kube-system"
 
-  values = [
-    "${file("values.yaml")}"
-  ]
-
-  set {
-    name  = "efsCSIDriver.enabled"
-    value = true
-  }
-  set {
-    name  = "efsCSIDriver.region"
-    value = var.region != "" ? var.region : regex(var.eks_iam_openid_connect_provider_url, "\\w+-\\w+-\\d")
-  }
-  set {
-    name  = "efsCSIDriver.imageAddress"
-    value = var.imageAddress
-  }
-  set {
-    name  = "efsCSIDriver.PassARN"
-    value = true
-  }
-  set {
-    name  = "efsCSIDriver.roleARN"
-    value = aws_iam_role.efs-csi-driver-role.name
-  }
-
+  values = [yamlencode(local.values)]
 
 
 }

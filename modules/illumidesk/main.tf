@@ -23,21 +23,38 @@ terraform {
 }
 
 ## Deploy application
+locals {
+  chart_name = "illumidesk/illumidesk"
+  
+}
 
+locals {
+  values = merge({
+    albIngress = {
+      enabled = var.enable_ingress
+      host = var.host
+      ingress = {
+        annotations = {
+          
+        }
+      }
+    } 
+
+
+  })
+}
 resource "helm_release" "k8s_cluster_resource" {
   # Due to a bug in the helm provider in repository management, it is more stable to use the repository URL directly.
   # See https://github.com/terraform-providers/terraform-provider-helm/issues/416#issuecomment-598828730 for more
   # information.
   repository = "https://illumidesk.github.io/helm-chart/"
-  name       = local.release_name
+  name       = var.namespace
   chart      = local.chart_name
-  version    = var.external_dns_chart_version
-  namespace  = local.chart_namespace
+  version    = var.illumidesk_version
+  namespace  = var.namespace
 
+  values = [yamlencode(local.values)]
 
 
 }
 
-locals {
-  
-}
