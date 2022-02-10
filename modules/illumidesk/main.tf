@@ -19,17 +19,87 @@ terraform {
     null = {
       source = "hashicorp/null"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "3.1.0"
+    }
+
   }
 }
 
+resource "random_string" "proxy_secret_token" {
+  length  = 16
+  special = true
+}
+
+resource "random_string" "jupyterhub_api_token" {
+  length  = 32
+  special = true
+}
+
+resource "random_string" "jupyterhub_crypt_key" {
+  length  = 32
+  special = true
+}
 ## Deploy application
 locals {
-  chart_name = "illumidesk/illumidesk"
-
+  chart_name        = "illumidesk/illumidesk"
+  nbgrader_password = var.enable_external_db == true ? var.database_password : var.postgresql_enabled == true ? var.postgresql_password : ""
+  external_db_url   = var.enable_external_db == true ? format("postgresql://%s:%s@%s.svc.cluster.local:%d/%s", var.database_user, var.database_password, var.db_host, var.db_port, var.database_name) : ""
+  postgresql_db_url = var.postgresql_enabled == true ? format("postgresql://%s:%s@%s-postgresql.%s.svc.cluster.local:%d/%s", var.postgresql_username, var.postgresql_password, var.namespace, var.namespace, var.postgresql_port, var.postgresql_db) : ""
 }
 
 locals {
   values = merge({
+    jupyterhub = {
+      hub = {
+        db = {
+          url = var.enable_external_db == true ? local.external_db_url : local.postgresql_db_url
+        }
+        extraConfig = {
+          JUPYTERHUB_API_TOKEN       = random_string.jupyterhub_api_token.result
+          JUPYTERHUB_CRYPT_KEY       = random_string.jupyterhub_crypt_key.result
+          POSTGRES_NBGRADER_PASSWORD = local.nbgrader_password
+          LTI_SHARED_SECRET          = var.lti_11_shared_secret
+
+        }
+        image = {
+          name       = var.hub_image
+          tag        = var.hub_tag
+          pullPolicy = var.hub_pull_policy
+
+        }
+
+      }
+      singleuser = {
+        defaultUrl = var.single_user_default_url
+        image = {
+          name       = var.single_user_image
+          tag        = var.single_user_tag
+          pullPolicy = var.single_user_pull_policy
+        }
+        cpu = {
+          limit     = var.single_cpu_limit
+          guarantee = var.single_cpu_guarantee
+        }
+        memory = {
+          memory    = var.single_mem_limit
+          guarantee = var.single_mem_guarantee
+        }
+
+      }
+      proxy = {
+        secretToken = random_string.proxy_secret_token.result
+      }
+    }
+    imageCredentials = {
+      enabled  = var.image_credentials_enabled
+      registry = var.image_credentials_registry
+      email    = var.image_credentials_email
+      username = var.image_credentials_username
+      password = var.image_credentials_password
+    }
+
     albIngress = {
       enabled = var.enable_ingress
       host    = var.host
@@ -56,12 +126,24 @@ locals {
         databasePassword = var.database_password
         port             = var.db_port
       }
+      postgresql = {
+        enabled                    = var.postgresql_enabled
+        postgresqlDatabase         = var.postgresql_db
+        postgresqlUsername         = var.postgresql_username
+        postgresqlPassword         = var.postgresql_password
+        postgresqlPostgresPassword = var.postgresql_password
+        port                       = var.db_port
+        service = {
+          port = var.postgresql_port
+        }
+      }
       graderSetupService = {
         enabled                   = var.enable_grader_setup_service
         graderCpuLimit            = var.grader_cpu_limit
         graderMemLimit            = var.grader_mem_limit
         graderSetupImage          = var.grader_setup_image
         graderSpawnerCpuGuarantee = var.grader_spawner_cpu_guarantee
+        graderSpawnerCpuLimit     = var.grader_spawner_cpu_limit
         graderSpawnerImage        = var.grader_spawner_image
         graderSpawnerMemGuarantee = var.grader_spawner_mem_guarantee
         graderSpawnerMemLimit     = var.grader_spawner_mem_limit
@@ -72,18 +154,18 @@ locals {
         storageRequests           = var.grader_storage_requests
       }
       illumideskSettings = {
-        enabled: var.enable_illumidesk_settings
-        customAuthType: var.custom_auth_type
-        lti13AuthorizeUrl: var.lti13_authorize_url
-        lti13ClientId: var.lti13_client_id
-        lti13Endpoint: var.lti13_endpoint
-        lti13TokenUrl: var.lti13_token_url
-        ltiConsumerKey: var.lti_11_consumer_key
-        oidcAuthorizeUrl: var.oidc_authorize_url
-        oidcCallbackUrl: "https://${var.host}/hub/oauth_callback"
-        oidcClientId: var.oidc_client_Id
-        oidcTokenUrl: var.oidc_token_url
-        oidcUserData: var.oidc_user_data
+        enabled : var.enable_illumidesk_settings
+        customAuthType : var.custom_auth_type
+        lti13AuthorizeUrl : var.lti13_authorize_url
+        lti13ClientId : var.lti13_client_id
+        lti13Endpoint : var.lti13_endpoint
+        lti13TokenUrl : var.lti13_token_url
+        ltiConsumerKey : var.lti_11_consumer_key
+        oidcAuthorizeUrl : var.oidc_authorize_url
+        oidcCallbackUrl : "https://${var.host}/hub/oauth_callback"
+        oidcClientId : var.oidc_client_Id
+        oidcTokenUrl : var.oidc_token_url
+        oidcUserData : var.oidc_user_data
       }
     }
 
