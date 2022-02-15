@@ -25,7 +25,7 @@ terraform {
 ## Deploy application
 locals {
   release_name = "cluster-illumidesk-resource"
-  chart_name   = "illumidesk/cluster"
+  chart_name   = "cluster"
   version      = "0.0.1"
 
 }

@@ -6,11 +6,11 @@ import (
 	"github.com/gruntwork-io/terratest/modules/terraform"
 )
 
-func TestClusterDeploymentHelmTemplateEngine(t *testing.T) {
+func TestIllumideskDeploymentHelmTemplateEngine(t *testing.T) {
 	t.Parallel()
 
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
-		TerraformDir: "../modules/cluster",
+		TerraformDir: "../modules/illumidesk",
 		VarFiles:     []string{"./varfile.tfvars"},
 		EnvVars: map[string]string{
 			"KUBECONFIG": "/root/.kube/config.yml",

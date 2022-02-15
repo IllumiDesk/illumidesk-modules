@@ -172,7 +172,7 @@ locals {
 
   })
 }
-resource "helm_release" "k8s_cluster_resource" {
+resource "helm_release" "illumidesk-stack-resource" {
   # Due to a bug in the helm provider in repository management, it is more stable to use the repository URL directly.
   # See https://github.com/terraform-providers/terraform-provider-helm/issues/416#issuecomment-598828730 for more
   # information.
