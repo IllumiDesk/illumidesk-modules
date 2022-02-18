@@ -1,8 +1,11 @@
 name: Terraform Plan Cluster Module
 on:
   push:
-    branches: [ main ]
+    branches: 
+      - main
   pull_request:
+    branches:
+      - '**'
     
 jobs:
 
