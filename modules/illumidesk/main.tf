@@ -48,13 +48,13 @@ resource "random_string" "lti_11_shared_secret" {
 }
 ## Deploy application
 locals {
-  chart_name        = "illumidesk"
+  chart_name           = "illumidesk"
   jupyterhub_api_token = tostring(random_string.jupyterhub_api_token.result)
   jupyterhub_crypt_key = tostring(random_string.jupyterhub_crypt_key.result)
   lti_11_shared_secret = tostring(random_string.lti_11_shared_secret.result)
-  nbgrader_password = var.enable_external_db == true ? var.database_password : var.postgresql_enabled == true ? var.postgresql_password : ""
-  external_db_url   = var.enable_external_db == true ? format("postgresql://%s:%s@%s.svc.cluster.local:%d/%s", var.database_user, var.database_password, var.db_host, var.db_port, var.database_name) : ""
-  postgresql_db_url = var.postgresql_enabled == true ? format("postgresql://%s:%s@%s-postgresql.%s.svc.cluster.local:%d/%s", var.postgresql_username, var.postgresql_password, var.namespace, var.namespace, var.postgresql_port, var.postgresql_db) : ""
+  nbgrader_password    = var.enable_external_db == true ? var.database_password : var.postgresql_enabled == true ? var.postgresql_password : ""
+  external_db_url      = var.enable_external_db == true ? format("postgresql://%s:%s@%s.svc.cluster.local:%d/%s", var.database_user, var.database_password, var.db_host, var.db_port, var.database_name) : ""
+  postgresql_db_url    = var.postgresql_enabled == true ? format("postgresql://%s:%s@%s-postgresql.%s.svc.cluster.local:%d/%s", var.postgresql_username, var.postgresql_password, var.namespace, var.namespace, var.postgresql_port, var.postgresql_db) : ""
 }
 
 locals {
@@ -91,7 +91,7 @@ locals {
           guarantee = var.single_cpu_guarantee
         }
         memory = {
-          limit    = var.single_mem_limit
+          limit     = var.single_mem_limit
           guarantee = var.single_mem_guarantee
         }
 
@@ -122,60 +122,60 @@ locals {
         }
       }
     }
-      allowNFS = {
-        enabled = var.enable_nfs
-        path    = "/"
-        server  = var.nfs_server
+    allowNFS = {
+      enabled = var.enable_nfs
+      path    = "/"
+      server  = var.nfs_server
+    }
+    externalDatabase = {
+      enabled          = var.enable_external_db
+      host             = var.db_host
+      database         = var.database_name
+      databaseUser     = var.database_user
+      databasePassword = var.database_password
+      port             = var.db_port
+    }
+    postgresql = {
+      enabled                    = var.postgresql_enabled
+      postgresqlDatabase         = var.postgresql_db
+      postgresqlUsername         = var.postgresql_username
+      postgresqlPassword         = var.postgresql_password
+      postgresqlPostgresPassword = var.postgresql_password
+      port                       = var.db_port
+      service = {
+        port = var.postgresql_port
       }
-      externalDatabase = {
-        enabled          = var.enable_external_db
-        host             = var.db_host
-        database         = var.database_name
-        databaseUser     = var.database_user
-        databasePassword = var.database_password
-        port             = var.db_port
-      }
-      postgresql = {
-        enabled                    = var.postgresql_enabled
-        postgresqlDatabase         = var.postgresql_db
-        postgresqlUsername         = var.postgresql_username
-        postgresqlPassword         = var.postgresql_password
-        postgresqlPostgresPassword = var.postgresql_password
-        port                       = var.db_port
-        service = {
-          port = var.postgresql_port
-        }
-      }
-      graderSetupService = {
-        enabled                   = var.enable_grader_setup_service
-        graderCpuLimit            = var.grader_cpu_limit
-        graderMemLimit            = var.grader_mem_limit
-        graderSetupImage          = var.grader_setup_image
-        graderSpawnerCpuGuarantee = var.grader_spawner_cpu_guarantee
-        graderSpawnerCpuLimit     = var.grader_spawner_cpu_limit
-        graderSpawnerImage        = var.grader_spawner_image
-        graderSpawnerMemGuarantee = var.grader_spawner_mem_guarantee
-        graderSpawnerMemLimit     = var.grader_spawner_mem_limit
-        graderSpawnerPullPolicy   = var.grader_spawner_pull_policy
-        graderSpawnerStorage      = var.grader_spawner_storage
-        pullPolicy                = var.grader_pull_policy
-        storageCapacity           = var.grader_storage_capacity
-        storageRequests           = var.grader_storage_requests
-      }
-      illumideskSettings = {
-        enabled = var.enable_illumidesk_settings
-        customAuthType = var.custom_auth_type
-        lti13AuthorizeUrl = var.lti13_authorize_url
-        lti13ClientId = var.lti13_client_id
-        lti13Endpoint = var.lti13_endpoint
-        lti13TokenUrl = var.lti13_token_url
-        ltiConsumerKey = var.lti_11_consumer_key
-        oidcAuthorizeUrl = var.oidc_authorize_url
-        oidcCallbackUrl = "https://${var.host}/hub/oauth_callback"
-        oidcClientId = var.oidc_client_Id
-        oidcTokenUrl = var.oidc_token_url
-        oidcUserData = var.oidc_user_data
-      }
+    }
+    graderSetupService = {
+      enabled                   = var.enable_grader_setup_service
+      graderCpuLimit            = var.grader_cpu_limit
+      graderMemLimit            = var.grader_mem_limit
+      graderSetupImage          = var.grader_setup_image
+      graderSpawnerCpuGuarantee = var.grader_spawner_cpu_guarantee
+      graderSpawnerCpuLimit     = var.grader_spawner_cpu_limit
+      graderSpawnerImage        = var.grader_spawner_image
+      graderSpawnerMemGuarantee = var.grader_spawner_mem_guarantee
+      graderSpawnerMemLimit     = var.grader_spawner_mem_limit
+      graderSpawnerPullPolicy   = var.grader_spawner_pull_policy
+      graderSpawnerStorage      = var.grader_spawner_storage
+      pullPolicy                = var.grader_pull_policy
+      storageCapacity           = var.grader_storage_capacity
+      storageRequests           = var.grader_storage_requests
+    }
+    illumideskSettings = {
+      enabled           = var.enable_illumidesk_settings
+      customAuthType    = var.custom_auth_type
+      lti13AuthorizeUrl = var.lti13_authorize_url
+      lti13ClientId     = var.lti13_client_id
+      lti13Endpoint     = var.lti13_endpoint
+      lti13TokenUrl     = var.lti13_token_url
+      ltiConsumerKey    = var.lti_11_consumer_key
+      oidcAuthorizeUrl  = var.oidc_authorize_url
+      oidcCallbackUrl   = "https://${var.host}/hub/oauth_callback"
+      oidcClientId      = var.oidc_client_Id
+      oidcTokenUrl      = var.oidc_token_url
+      oidcUserData      = var.oidc_user_data
+    }
 
   })
 }

@@ -1,0 +1,42 @@
+name: "Terraform"
+
+on:
+  pull_request:
+    branches:
+        - main
+
+jobs:
+  terraform:
+    name: "Terraform"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: "modules/cluster"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.0.2
+
+      - name: Terraform Init
+        id: init
+        run: terraform init
+
+      - name: Terraform Fmt
+        id: fmt
+        run: terraform fmt -recursive
+      
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+
+      - name: Terraform Fmt Status
+        if: steps.fmt.outcome == 'failure'
+        run: exit 1
+
+      - name: Terraform Validate Status
+        if: steps.validate.outcome == 'failure'
+        run: exit 1
