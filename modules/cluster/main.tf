@@ -26,7 +26,7 @@ terraform {
 locals {
   release_name = "cluster-illumidesk-resource"
   chart_name   = "cluster"
-  version      = "0.0.1"
+  version      = "0.0.3"
 
 }
 
@@ -34,7 +34,7 @@ locals {
   values = merge({
     efsCSIDriver = {
       enabled      = true
-      region       = regex("(\\w+-\\w+-\\d)", var.eks_iam_openid_connect_provider_url)
+      region       = regex("(\\w+-\\w+-\\d)", var.eks_iam_openid_connect_provider_url)[0]
       imageAddress = var.imageAddress
       PassARN      = true
       roleARN      = aws_iam_role.efs-csi-driver-role.arn

@@ -13,7 +13,7 @@ func TestClusterDeploymentHelmTemplateEngine(t *testing.T) {
 		TerraformDir: "../modules/cluster",
 		VarFiles:     []string{"./varfile.tfvars"},
 		EnvVars: map[string]string{
-			"KUBECONFIG": "/root/.kube/config.yml",
+			"KUBE_CONFIG_PATH": "~/.kube/config",
 		},
 	})
 

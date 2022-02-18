@@ -29,21 +29,29 @@ terraform {
 
 resource "random_string" "proxy_secret_token" {
   length  = 16
-  special = true
+  special = false
 }
 
 resource "random_string" "jupyterhub_api_token" {
   length  = 32
-  special = true
+  special = false
 }
 
 resource "random_string" "jupyterhub_crypt_key" {
   length  = 32
-  special = true
+  special = false
+}
+
+resource "random_string" "lti_11_shared_secret" {
+  length  = 32
+  special = false
 }
 ## Deploy application
 locals {
-  chart_name        = "illumidesk/illumidesk"
+  chart_name        = "illumidesk"
+  jupyterhub_api_token = tostring(random_string.jupyterhub_api_token.result)
+  jupyterhub_crypt_key = tostring(random_string.jupyterhub_crypt_key.result)
+  lti_11_shared_secret = tostring(random_string.lti_11_shared_secret.result)
   nbgrader_password = var.enable_external_db == true ? var.database_password : var.postgresql_enabled == true ? var.postgresql_password : ""
   external_db_url   = var.enable_external_db == true ? format("postgresql://%s:%s@%s.svc.cluster.local:%d/%s", var.database_user, var.database_password, var.db_host, var.db_port, var.database_name) : ""
   postgresql_db_url = var.postgresql_enabled == true ? format("postgresql://%s:%s@%s-postgresql.%s.svc.cluster.local:%d/%s", var.postgresql_username, var.postgresql_password, var.namespace, var.namespace, var.postgresql_port, var.postgresql_db) : ""
@@ -56,11 +64,11 @@ locals {
         db = {
           url = var.enable_external_db == true ? local.external_db_url : local.postgresql_db_url
         }
-        extraConfig = {
-          JUPYTERHUB_API_TOKEN       = random_string.jupyterhub_api_token.result
-          JUPYTERHUB_CRYPT_KEY       = random_string.jupyterhub_crypt_key.result
+        extraEnv = {
+          JUPYTERHUB_API_TOKEN       = local.jupyterhub_api_token
+          JUPYTERHUB_CRYPT_KEY       = local.jupyterhub_crypt_key
           POSTGRES_NBGRADER_PASSWORD = local.nbgrader_password
-          LTI_SHARED_SECRET          = var.lti_11_shared_secret
+          LTI_SHARED_SECRET          = local.lti_11_shared_secret
 
         }
         image = {
@@ -83,13 +91,13 @@ locals {
           guarantee = var.single_cpu_guarantee
         }
         memory = {
-          memory    = var.single_mem_limit
+          limit    = var.single_mem_limit
           guarantee = var.single_mem_guarantee
         }
 
       }
       proxy = {
-        secretToken = random_string.proxy_secret_token.result
+        secretToken = tostring(random_string.proxy_secret_token.result)
       }
     }
     imageCredentials = {
@@ -113,6 +121,7 @@ locals {
           "kubernetes.io/ingress.class"               = "alb"
         }
       }
+    }
       allowNFS = {
         enabled = var.enable_nfs
         path    = "/"
@@ -154,21 +163,19 @@ locals {
         storageRequests           = var.grader_storage_requests
       }
       illumideskSettings = {
-        enabled : var.enable_illumidesk_settings
-        customAuthType : var.custom_auth_type
-        lti13AuthorizeUrl : var.lti13_authorize_url
-        lti13ClientId : var.lti13_client_id
-        lti13Endpoint : var.lti13_endpoint
-        lti13TokenUrl : var.lti13_token_url
-        ltiConsumerKey : var.lti_11_consumer_key
-        oidcAuthorizeUrl : var.oidc_authorize_url
-        oidcCallbackUrl : "https://${var.host}/hub/oauth_callback"
-        oidcClientId : var.oidc_client_Id
-        oidcTokenUrl : var.oidc_token_url
-        oidcUserData : var.oidc_user_data
+        enabled = var.enable_illumidesk_settings
+        customAuthType = var.custom_auth_type
+        lti13AuthorizeUrl = var.lti13_authorize_url
+        lti13ClientId = var.lti13_client_id
+        lti13Endpoint = var.lti13_endpoint
+        lti13TokenUrl = var.lti13_token_url
+        ltiConsumerKey = var.lti_11_consumer_key
+        oidcAuthorizeUrl = var.oidc_authorize_url
+        oidcCallbackUrl = "https://${var.host}/hub/oauth_callback"
+        oidcClientId = var.oidc_client_Id
+        oidcTokenUrl = var.oidc_token_url
+        oidcUserData = var.oidc_user_data
       }
-    }
-
 
   })
 }
@@ -176,13 +183,19 @@ resource "helm_release" "illumidesk-stack-resource" {
   # Due to a bug in the helm provider in repository management, it is more stable to use the repository URL directly.
   # See https://github.com/terraform-providers/terraform-provider-helm/issues/416#issuecomment-598828730 for more
   # information.
-  repository = "https://illumidesk.github.io/helm-chart/"
-  name       = var.namespace
-  chart      = local.chart_name
-  version    = var.illumidesk_version
-  namespace  = var.namespace
+  repository       = "https://illumidesk.github.io/helm-chart/"
+  name             = var.namespace
+  chart            = local.chart_name
+  version          = var.illumidesk_version
+  namespace        = var.namespace
+  create_namespace = true
+  values           = [yamlencode(local.values)]
 
-  values = [yamlencode(local.values)]
+  depends_on = [
+    random_string.proxy_secret_token,
+    random_string.jupyterhub_api_token,
+    random_string.jupyterhub_crypt_key
+  ]
 
 
 }
