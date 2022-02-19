@@ -24,26 +24,54 @@ terraform {
 
 ## Deploy application
 locals {
-    release_name = "cluster-illumidesk-resource"
-    chart_name   = "cluster"
-    version      = "0.0.1"
+  release_name = "cluster-illumidesk-resource"
+  chart_name   = "cluster"
+  version      = "0.0.3"
+
 }
 
-# creates trust relationship by assuming role using OIDC
-module "assume_role_policy" {
-  source = "git::git@github.com:gruntwork-io/terraform-aws-eks.git//modules/eks-iam-role-assume-role-policy-for-service-account?ref=v0.7.0"
+locals {
+  values = merge({
+    efsCSIDriver = {
+      enabled      = true
+      region       = regex("(\\w+-\\w+-\\d)", var.eks_iam_openid_connect_provider_url)[0]
+      imageAddress = var.imageAddress
+      PassARN      = true
+      roleARN      = aws_iam_role.efs-csi-driver-role.arn
+    }
+    },
 
-  eks_openid_connect_provider_arn = var.eks_iam_openid_connect_provider_arn
-  eks_openid_connect_provider_url = var.eks_iam_openid_connect_provider_url
-  namespaces                      = ["kube-system"]
-  service_accounts                = []
+  )
 }
 
 # creates efs csi driver role and configures assume role policy document
 resource "aws_iam_role" "efs-csi-driver-role" {
   name               = "efs-csi-driver-role"
-  assume_role_policy = module.assume_role_policy.assume_role_policy_json
+  assume_role_policy = <<EOT
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::${var.account_id}:oidc-provider/oidc.eks.us-west-2.amazonaws.com/id/${regex("[[:alnum:]]+$", var.eks_iam_openid_connect_provider_url)}"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "oidc.eks.us-west-2.amazonaws.com/id/${regex("[[:alnum:]]+$", var.eks_iam_openid_connect_provider_url)}:sub": "system:serviceaccount:kube-system:efs-csi-controller-sa"
+        }
+      }
+    }
+  ]
 }
+
+
+  EOT
+
+}
+
+
 
 # 1. Creates efs csi driver policy
 resource "aws_iam_policy" "efs_csi_driver_policy" {
@@ -89,8 +117,8 @@ resource "aws_iam_policy" "efs_csi_driver_policy" {
 EOT
 }
 
-# attaches policy 
-resource "aws_iam_role_policy_attachment" "test-attach" {
+# creates trust relationship by assuming role using OIDC
+resource "aws_iam_role_policy_attachment" "aws-efs-csi-driver-attach" {
   role       = aws_iam_role.efs-csi-driver-role.name
   policy_arn = aws_iam_policy.efs_csi_driver_policy.arn
 }
@@ -105,31 +133,7 @@ resource "helm_release" "k8s_cluster_resource" {
   version    = local.version
   namespace  = "kube-system"
 
-  values = [
-      "${file("values.yaml")}"
-  ]
-
-  set {
-      name = "efsCSIDriver.enabled"
-      value = true
-  }
-  set {
-      name = "efsCSIDriver.region"
-      value = var.region
-  }
-  set {
-      name = "efsCSIDriver.imageAddress"
-      value = var.imageAddress
-  }
-  set {
-      name = "efsCSIDriver.PassARN"
-      value = true
-  }
-  set {
-      name = "efsCSIDriver.roleARN"
-      value = aws_iam_role.efs-csi-driver-role.name
-  }
-
+  values = [yamlencode(local.values)]
 
 
 }

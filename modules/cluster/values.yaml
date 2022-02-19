@@ -1,6 +1,0 @@
-efsCSIDriver:
-  enabled: true
-  region: "us-west-2"
-  imageAddress: "602401143452"
-  PassARN: true 
-  roleARN: "arn:aws:iam::898368509401:role/AmazonEKS_EFS_CSI_DriverRole"
