@@ -1,7 +1,6 @@
 
 variable "namespace" {
   type    = string
-  default = ""
 }
 
 variable "illumidesk_version" {
@@ -80,12 +79,10 @@ variable "enable_ingress" {
 
 variable "acm_certificate" {
   type    = string
-  default = ""
 }
 
 variable "group_name" {
   type    = string
-  default = ""
 }
 
 variable "lb_tags" {
@@ -110,23 +107,19 @@ variable "enable_external_db" {
 
 variable "db_host" {
   type    = string
-  default = ""
 }
 
 variable "database_name" {
   type    = string
-  default = ""
 }
 
 variable "database_user" {
   type    = string
-  default = "gruntwork"
 }
 
 
 variable "database_password" {
   type      = string
-  default   = ""
   sensitive = true
 }
 
@@ -286,6 +279,7 @@ variable "image_credentials_username" {
 variable "image_credentials_password" {
   type      = string
   sensitive = true
+  default   = ""
 }
 
 variable "postgresql_enabled" {
