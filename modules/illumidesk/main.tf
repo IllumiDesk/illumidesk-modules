@@ -62,9 +62,7 @@ locals {
   values = merge({
     jupyterhub = {
       hub = {
-        db = {
-          url = var.enable_external_db == true ? local.external_db_url : local.postgresql_db_url
-        }
+
         extraEnv = {
           JUPYTERHUB_API_TOKEN         = local.jupyterhub_api_token
           JUPYTERHUB_CRYPT_KEY         = local.jupyterhub_crypt_key
