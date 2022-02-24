@@ -1,6 +1,6 @@
 
 variable "namespace" {
-  type    = string
+  type = string
 }
 
 variable "illumidesk_version" {
@@ -78,11 +78,11 @@ variable "enable_ingress" {
 }
 
 variable "acm_certificate" {
-  type    = string
+  type = string
 }
 
 variable "group_name" {
-  type    = string
+  type = string
 }
 
 variable "lb_tags" {
@@ -106,15 +106,15 @@ variable "enable_external_db" {
 }
 
 variable "db_host" {
-  type    = string
+  type = string
 }
 
 variable "database_name" {
-  type    = string
+  type = string
 }
 
 variable "database_user" {
-  type    = string
+  type = string
 }
 
 
