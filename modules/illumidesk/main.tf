@@ -54,7 +54,7 @@ locals {
   lti_11_shared_secret = tostring(random_string.lti_11_shared_secret.result)
   nbgrader_password    = var.enable_external_db == true ? var.database_password : var.postgresql_enabled == true ? var.postgresql_password : ""
   jupyterhub_password  = var.enable_external_db == true ? var.database_password : var.postgresql_enabled == true ? var.postgresql_password : ""
-  external_db_url      = var.enable_external_db == true ? format("postgresql://%s:%s@%s.svc.cluster.local:%d/%s", var.database_user, var.database_password, var.db_host, var.db_port, var.database_name) : ""
+  external_db_url      = var.enable_external_db == true ? format("postgresql://%s:%s@%s:%d/%s", var.database_user, var.database_password, var.db_host, var.db_port, var.database_name) : ""
   postgresql_db_url    = var.postgresql_enabled == true ? format("postgresql://%s:%s@%s-postgresql.%s.svc.cluster.local:%d/%s", var.postgresql_username, var.postgresql_password, var.namespace, var.namespace, var.postgresql_port, var.postgresql_db) : ""
 }
 
@@ -68,6 +68,7 @@ locals {
         extraEnv = {
           JUPYTERHUB_API_TOKEN         = local.jupyterhub_api_token
           JUPYTERHUB_CRYPT_KEY         = local.jupyterhub_crypt_key
+          POSTGRES_NBGRADER_PASSWORD   = local.nbgrader_password
           LTI_SHARED_SECRET            = local.lti_11_shared_secret
           POSTGRES_JUPYTERHUB_PASSWORD = local.jupyterhub_password
 
