@@ -68,7 +68,6 @@ locals {
         extraEnv = {
           JUPYTERHUB_API_TOKEN         = local.jupyterhub_api_token
           JUPYTERHUB_CRYPT_KEY         = local.jupyterhub_crypt_key
-          POSTGRES_NBGRADER_PASSWORD   = local.nbgrader_password
           LTI_SHARED_SECRET            = local.lti_11_shared_secret
           POSTGRES_JUPYTERHUB_PASSWORD = local.jupyterhub_password
 
