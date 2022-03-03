@@ -41,13 +41,13 @@ variable "single_cpu_guarantee" {
 
 variable "single_mem_limit" {
   type    = string
-  default = "1G"
+  default = "2G"
 }
 
 
 variable "single_mem_guarantee" {
   type    = string
-  default = "2G"
+  default = "1G"
 }
 
 variable "hub_image" {
