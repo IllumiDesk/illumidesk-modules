@@ -30,7 +30,7 @@ variable "single_user_pull_policy" {
 
 variable "single_cpu_limit" {
   type    = number
-  default = 0.5
+  default = 1.0
 }
 
 
