@@ -56,6 +56,9 @@ locals {
   jupyterhub_password  = var.enable_external_db == true ? var.database_password : var.postgresql_enabled == true ? var.postgresql_password : ""
   external_db_url      = var.enable_external_db == true ? format("postgresql://%s:%s@%s:%d/%s", var.database_user, var.database_password, var.db_host, var.db_port, var.database_name) : ""
   postgresql_db_url    = var.postgresql_enabled == true ? format("postgresql://%s:%s@%s-postgresql.%s.svc.cluster.local:%d/%s", var.postgresql_username, var.postgresql_password, var.namespace, var.namespace, var.postgresql_port, var.postgresql_db) : ""
+  exchange_sub_path    = format("%s/exchange/", var.namespace)
+  grader_pvc           = format("grader-pvc-%s", var.namespace)
+  grader_sub_path      = format("%s/home/{username}", var.namespace)
 }
 
 locals {
@@ -93,6 +96,20 @@ locals {
         memory = {
           limit     = var.single_mem_limit
           guarantee = var.single_mem_guarantee
+        }
+        storage = {
+          extraVolumeMounts = [
+            {
+              mountPath = "/srv/nbgrader/exchange"
+              name      = "home"
+              subPath   = local.exchange_sub_path
+            }
+          ]
+          static = {
+            pvcName = local.grader_pvc
+            subPath = local.grader_sub_path
+          }
+          type = "static"
         }
 
       }
