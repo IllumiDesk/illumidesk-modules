@@ -20,7 +20,7 @@ variable "single_user_image" {
 
 variable "single_user_tag" {
   type    = string
-  default = "latest"
+  default = "python-3.9.5"
 }
 
 variable "single_user_pull_policy" {
