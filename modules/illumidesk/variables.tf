@@ -92,9 +92,17 @@ variable "lb_tags" {
 
 variable "enable_nfs" {
   type    = bool
+  default = false
+}
+
+variable "enable_efs" {
+  type    = bool
   default = true
 }
 
+variable "efs_volume_handle" {
+  type = string
+}
 
 variable "nfs_server" {
   type = string

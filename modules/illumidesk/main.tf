@@ -57,8 +57,8 @@ locals {
   external_db_url      = var.enable_external_db == true ? format("postgresql://%s:%s@%s:%d/%s", var.database_user, var.database_password, var.db_host, var.db_port, var.database_name) : ""
   postgresql_db_url    = var.postgresql_enabled == true ? format("postgresql://%s:%s@%s-postgresql.%s.svc.cluster.local:%d/%s", var.postgresql_username, var.postgresql_password, var.namespace, var.namespace, var.postgresql_port, var.postgresql_db) : ""
   exchange_sub_path    = format("%s/exchange/", var.namespace)
-  grader_pvc           = format("grader-pvc-%s", var.namespace)
-  grader_sub_path      = format("%s/home/{username}", var.namespace)
+  shared_pvc           = format("shared-pvc-%s", var.namespace)
+  shared_sub_path      = format("%s/home/{username}", var.namespace)
 }
 
 locals {
@@ -106,8 +106,8 @@ locals {
             }
           ]
           static = {
-            pvcName = local.grader_pvc
-            subPath = local.grader_sub_path
+            pvcName = local.shared_pvc
+            subPath = local.shared_sub_path
           }
           type = "static"
         }
@@ -143,6 +143,10 @@ locals {
       enabled = var.enable_nfs
       path    = "/"
       server  = var.nfs_server
+    }
+    allowEFS = {
+      enabled = var.enable_efs
+      volumeHandle  = var.efs_volume_handle
     }
     externalDatabase = {
       enabled          = var.enable_external_db

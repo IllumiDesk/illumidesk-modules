@@ -1,8 +1,3 @@
-variable "imageAddress" {
-  type    = string
-  default = "602401143452"
-}
-
 variable "account_id" {
   type    = string
   default = ""
