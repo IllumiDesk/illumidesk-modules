@@ -102,10 +102,12 @@ variable "enable_efs" {
 
 variable "efs_volume_handle" {
   type = string
+  default = ""
 }
 
 variable "nfs_server" {
   type = string
+  default = ""
 }
 
 variable "enable_external_db" {
