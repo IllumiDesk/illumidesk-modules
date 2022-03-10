@@ -145,8 +145,10 @@ locals {
       server  = var.nfs_server
     }
     allowEFS = {
-      enabled = var.enable_efs
-      volumeHandle  = var.efs_volume_handle
+      enabled                      = var.enable_efs
+      volumeHandle                 = var.efs_volume_handle
+      nbExchangeAccessPoint        = var.nbexchange_access_point
+      illumideskCoursesAccessPoint = var.illumidesk_courses_access_point
     }
     externalDatabase = {
       enabled          = var.enable_external_db
