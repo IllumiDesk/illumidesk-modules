@@ -101,12 +101,22 @@ variable "enable_efs" {
 }
 
 variable "efs_volume_handle" {
-  type = string
+  type    = string
+  default = ""
+}
+
+variable "nbexchange_access_point" {
+  type    = string
+  default = ""
+}
+
+variable "illumidesk_courses_access_point" {
+  type    = string
   default = ""
 }
 
 variable "nfs_server" {
-  type = string
+  type    = string
   default = ""
 }
 
